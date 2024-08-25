@@ -11,33 +11,65 @@ import { Label } from '@/components/ui/label'
 import { ChangeEvent, useActionState, useState } from 'react'
 
 interface CalculatorState {
-  openPrice: number
-  stopLossPrice: number
+  openPrice: string
+  stopLossPrice: string
   pips: number
   capital: number
   riskPercentage: number
-  [key: string]: number // Add index signature
+  [key: string]: number | string
 }
 
-function App() {
-  const [lotSize, setLotSize] = useState(0)
-  const [riskAmount, setRiskAmount] = useState(0)
+const XAU_USD_CONTRACT_SIZE = 100
 
+const formatToTwoDecimal = (value: number) => Math.floor(value * 100) / 100
+
+function App() {
   const [state, action] = useActionState<CalculatorState>(
     (state: CalculatorState) => {
+      if (!parseFloat(state.openPrice) || !parseFloat(state.stopLossPrice)) {
+        return state
+      }
+
+      const maxRiskAmount = (state.capital * state.riskPercentage) / 100
+
+      const openPrice = parseFloat(state.openPrice)
+      const stopLossPrice = parseFloat(state.stopLossPrice)
+
+      const pips = Math.abs(openPrice - stopLossPrice) * 10
+      state.pips = formatToTwoDecimal(pips)
+
+      const maxLotSize = formatToTwoDecimal(
+        maxRiskAmount /
+          (Math.abs(openPrice - stopLossPrice) * XAU_USD_CONTRACT_SIZE)
+      )
+
+      setLotSize(maxLotSize.toString())
+
+      setRiskAmount(
+        (
+          Math.abs(openPrice - stopLossPrice) *
+          XAU_USD_CONTRACT_SIZE *
+          maxLotSize
+        ).toFixed(2)
+      )
+
       return state
     },
     {
-      openPrice: 0,
-      stopLossPrice: 0,
+      openPrice: '0',
+      stopLossPrice: '0',
       pips: 0,
       capital: 2000,
       riskPercentage: 2,
     }
   )
+
+  const [lotSize, setLotSize] = useState('')
+  const [riskAmount, setRiskAmount] = useState('')
+
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
-    state[name] = parseFloat(value) || 0
+    state[name] = value
     action()
   }
 
@@ -74,6 +106,7 @@ function App() {
           <Label htmlFor="pips">Pips</Label>
           <Input
             id="pips"
+            disabled
             placeholder="Pips"
             onChange={handleChange}
             name="pips"
