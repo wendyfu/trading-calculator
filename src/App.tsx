@@ -38,6 +38,12 @@ function App() {
       const pips = Math.abs(openPrice - stopLossPrice) * 10
       state.pips = formatToTwoDecimal(pips)
 
+      if (pips === 0) {
+        setLotSize('')
+        setRiskAmount('')
+        return state
+      }
+
       const maxLotSize = formatToTwoDecimal(
         maxRiskAmount /
           (Math.abs(openPrice - stopLossPrice) * XAU_USD_CONTRACT_SIZE)
