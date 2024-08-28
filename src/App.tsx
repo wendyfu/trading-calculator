@@ -9,6 +9,21 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ChangeEvent, useActionState, useState } from 'react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { cn } from '@/lib/utils'
 
 interface CalculatorState {
   openPrice: string
@@ -21,9 +36,27 @@ interface CalculatorState {
 
 const XAU_USD_CONTRACT_SIZE = 100
 
+const PAIRS = [
+  {
+    value: 'XAU_USD',
+    label: 'XAU/USD',
+  },
+  {
+    value: 'US100_USD',
+    label: 'Nasdaq US100',
+  },
+  {
+    value: 'CLU_USD',
+    label: 'Crude Oil CLU',
+  },
+]
+
 const formatToTwoDecimal = (value: number) => Math.floor(value * 100) / 100
 
 function App() {
+  const [open, setOpen] = useState(false)
+  const [value, setValue] = useState('XAU_USD')
+
   const [state, action] = useActionState<CalculatorState>(
     (state: CalculatorState) => {
       if (!parseFloat(state.openPrice) || !parseFloat(state.stopLossPrice)) {
@@ -86,6 +119,51 @@ function App() {
         <CardDescription>Tailored for Orbi Trade</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="grid items-center gap-2 mb-2 pb-2">
+          <Label>Pairs</Label>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="justify-between"
+              >
+                {value
+                  ? PAIRS.find((pair) => pair.value === value)?.label
+                  : 'Select framework...'}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[350px] p-0">
+              <Command>
+                <CommandInput placeholder="Search pairs..." />
+                <CommandList>
+                  <CommandGroup>
+                    {PAIRS.map((pair) => (
+                      <CommandItem
+                        key={pair.value}
+                        value={pair.value}
+                        onSelect={(currentValue) => {
+                          setValue(currentValue === value ? '' : currentValue)
+                          setOpen(false)
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            'mr-2 h-4 w-4',
+                            value === pair.value ? 'opacity-100' : 'opacity-0'
+                          )}
+                        />
+                        {pair.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
         <div className="grid grid-cols-2 gap-4 mb-2 pb-2">
           <div className="grid items-center gap-2">
             <Label htmlFor="open-price">Open price</Label>
