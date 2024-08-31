@@ -24,14 +24,20 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 interface CalculatorState {
   openPrice: string
   stopLossPrice: string
-  pips: number
+  pips: string
   capital: number
   riskPercentage: number
   [key: string]: number | string
+}
+
+const CALCULATION_METHOD = {
+  OPEN_STOP_LOSS: 'OPEN_STOP_LOSS',
+  PIPS: 'PIPS',
 }
 
 const XAU_USD_CONTRACT_SIZE = 100
@@ -57,6 +63,10 @@ function App() {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('XAU_USD')
 
+  const [calculationMethod, setCalculationMethod] = useState(
+    CALCULATION_METHOD.PIPS
+  )
+
   const [state, action] = useActionState<CalculatorState>(
     (state: CalculatorState) => {
       if (!parseFloat(state.openPrice) || !parseFloat(state.stopLossPrice)) {
@@ -69,7 +79,7 @@ function App() {
       const stopLossPrice = parseFloat(state.stopLossPrice)
 
       const pips = Math.abs(openPrice - stopLossPrice) * 10
-      state.pips = formatToTwoDecimal(pips)
+      state.pips = formatToTwoDecimal(pips).toString()
 
       if (pips === 0) {
         setLotSize('')
@@ -95,9 +105,9 @@ function App() {
       return state
     },
     {
-      openPrice: '0',
-      stopLossPrice: '0',
-      pips: 0,
+      openPrice: '',
+      stopLossPrice: '',
+      pips: '',
       capital: 2000,
       riskPercentage: 2,
     }
@@ -131,7 +141,7 @@ function App() {
               >
                 {value
                   ? PAIRS.find((pair) => pair.value === value)?.label
-                  : 'Select framework...'}
+                  : 'Select pairs...'}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -164,40 +174,61 @@ function App() {
             </PopoverContent>
           </Popover>
         </div>
-        <div className="grid grid-cols-2 gap-4 mb-2 pb-2">
-          <div className="grid items-center gap-2">
-            <Label htmlFor="open-price">Open price</Label>
-            <Input
-              id="open-price"
-              placeholder="Entry price"
-              onChange={handleChange}
-              name="openPrice"
-              value={state.openPrice}
-            />
-          </div>
-          <div className="grid items-center gap-2">
-            <Label htmlFor="stop-loss-price">Stop loss price</Label>
-            <Input
-              id="stop-loss-price"
-              placeholder="Stop loss price"
-              onChange={handleChange}
-              name="stopLossPrice"
-              value={state.stopLossPrice}
-            />
-          </div>
-        </div>
+        {/* <div className="flex flex-col rounded-md border p-6 mb-4"> */}
         <div className="grid items-center gap-2 mb-2 pb-2">
-          <Label htmlFor="pips">Pips</Label>
+          <Label>Calculate by...</Label>
+          <RadioGroup
+            defaultValue={CALCULATION_METHOD.PIPS}
+            onValueChange={setCalculationMethod}
+          >
+            <div className="flex gap-2 items-center">
+              <RadioGroupItem value={CALCULATION_METHOD.PIPS} />
+              <Label htmlFor={CALCULATION_METHOD.PIPS}>Pips</Label>
+            </div>
+            <div className="flex gap-2 items-center">
+              <RadioGroupItem value={CALCULATION_METHOD.OPEN_STOP_LOSS} />
+              <Label htmlFor={CALCULATION_METHOD.OPEN_STOP_LOSS}>
+                Open and stop loss price
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+        {calculationMethod === CALCULATION_METHOD.OPEN_STOP_LOSS ? (
+          <div className="grid grid-cols-2 gap-4 mb-2 pb-2">
+            <div className="grid items-center gap-2">
+              <Label htmlFor="open-price">Open price</Label>
+              <Input
+                id="open-price"
+                placeholder="e.g. 2345.67"
+                onChange={handleChange}
+                name="openPrice"
+                value={state.openPrice}
+              />
+            </div>
+            <div className="grid items-center gap-2">
+              <Label htmlFor="stop-loss-price">Stop loss price</Label>
+              <Input
+                id="stop-loss-price"
+                placeholder="e.g. 2345.67"
+                onChange={handleChange}
+                name="stopLossPrice"
+                value={state.stopLossPrice}
+              />
+            </div>
+          </div>
+        ) : null}
+        <div className="grid items-center gap-2">
+          <Label htmlFor="pips">Pip amount</Label>
           <Input
             id="pips"
-            disabled
-            placeholder="Pips"
+            disabled={calculationMethod === CALCULATION_METHOD.OPEN_STOP_LOSS}
+            placeholder="e.g. 200"
             onChange={handleChange}
             name="pips"
             value={state.pips}
           />
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4 mt-2 pt-2">
           <div className="grid items-center gap-2 col-span-2">
             <Label htmlFor="capital">Capital</Label>
             <Input
