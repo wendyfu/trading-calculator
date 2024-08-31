@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ChangeEvent, useActionState, useState } from 'react'
+import { ChangeEvent, useActionState, useState, useRef } from 'react'
 import {
   Popover,
   PopoverContent,
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Transition } from 'react-transition-group'
 
 interface CalculatorState {
   openPrice: string
@@ -122,6 +123,39 @@ function App() {
     action()
   }
 
+  const [startTransition, setStartTransition] = useState(false)
+  const transitionNodeRef = useRef<HTMLDivElement | null>(null)
+
+  const transitionStyles = {
+    entering: {
+      opacity: 1,
+      height: 70,
+      transition: 'all 0.125s ease-in-out, opacity 0.25s ease-in-out 0.125s',
+    },
+    entered: {
+      opacity: 1,
+      height: 70,
+      transition: 'all 0.125s ease-in-out, opacity 0.25s ease-in-out 0.125s',
+    },
+    exiting: {
+      opacity: 0,
+      height: 70,
+      transition: 'all 0.25s ease-in-out, opacity 0s',
+    },
+    exited: {
+      opacity: 0,
+      height: 0,
+      margin: 0,
+      padding: 0,
+      transition: 'all 0.25s ease-in-out, opacity 0s',
+    },
+  }
+
+  const onCalculationMethodChange = (value: string) => {
+    setCalculationMethod(value)
+    setStartTransition(!startTransition)
+  }
+
   return (
     <Card className="w-[400px]">
       <CardHeader>
@@ -174,49 +208,77 @@ function App() {
             </PopoverContent>
           </Popover>
         </div>
-        {/* <div className="flex flex-col rounded-md border p-6 mb-4"> */}
         <div className="grid items-center gap-2 mb-2 pb-2">
           <Label>Calculate by...</Label>
           <RadioGroup
-            defaultValue={CALCULATION_METHOD.PIPS}
-            onValueChange={setCalculationMethod}
+            value={calculationMethod}
+            onValueChange={onCalculationMethodChange}
           >
             <div className="flex gap-2 items-center">
               <RadioGroupItem value={CALCULATION_METHOD.PIPS} />
-              <Label htmlFor={CALCULATION_METHOD.PIPS}>Pips</Label>
+              <Label
+                htmlFor={CALCULATION_METHOD.PIPS}
+                onClick={() =>
+                  onCalculationMethodChange(CALCULATION_METHOD.PIPS)
+                }
+                className="cursor-pointer"
+              >
+                Pips
+              </Label>
             </div>
             <div className="flex gap-2 items-center">
               <RadioGroupItem value={CALCULATION_METHOD.OPEN_STOP_LOSS} />
-              <Label htmlFor={CALCULATION_METHOD.OPEN_STOP_LOSS}>
+              <Label
+                htmlFor={CALCULATION_METHOD.OPEN_STOP_LOSS}
+                onClick={() =>
+                  onCalculationMethodChange(CALCULATION_METHOD.OPEN_STOP_LOSS)
+                }
+                className="cursor-pointer"
+              >
                 Open and stop loss price
               </Label>
             </div>
           </RadioGroup>
         </div>
-        {calculationMethod === CALCULATION_METHOD.OPEN_STOP_LOSS ? (
-          <div className="grid grid-cols-2 gap-4 mb-2 pb-2">
-            <div className="grid items-center gap-2">
-              <Label htmlFor="open-price">Open price</Label>
-              <Input
-                id="open-price"
-                placeholder="e.g. 2345.67"
-                onChange={handleChange}
-                name="openPrice"
-                value={state.openPrice}
-              />
+        <Transition nodeRef={transitionNodeRef} in={startTransition}>
+          {(transitionState: 'entering' | 'entered' | 'exiting' | 'exited') => (
+            <div
+              className="grid grid-cols-2 gap-4 mb-2 pb-2"
+              ref={transitionNodeRef}
+              style={{
+                ...transitionStyles[transitionState],
+              }}
+            >
+              {calculationMethod === CALCULATION_METHOD.OPEN_STOP_LOSS && (
+                <>
+                  <div className="grid items-center gap-2">
+                    <Label htmlFor="open-price">Open price</Label>
+                    <Input
+                      id="open-price"
+                      placeholder="e.g. 2345.67"
+                      onChange={handleChange}
+                      name="openPrice"
+                      value={state.openPrice}
+                    />
+                  </div>
+                  <div className="grid items-center gap-2">
+                    <Label htmlFor="stop-loss-price">Stop loss price</Label>
+                    <Input
+                      id="stop-loss-price"
+                      placeholder="e.g. 2345.67"
+                      onChange={handleChange}
+                      name="stopLossPrice"
+                      value={state.stopLossPrice}
+                    />
+                  </div>
+                </>
+              )}
             </div>
-            <div className="grid items-center gap-2">
-              <Label htmlFor="stop-loss-price">Stop loss price</Label>
-              <Input
-                id="stop-loss-price"
-                placeholder="e.g. 2345.67"
-                onChange={handleChange}
-                name="stopLossPrice"
-                value={state.stopLossPrice}
-              />
-            </div>
-          </div>
-        ) : null}
+          )}
+        </Transition>
+        {/* {calculationMethod === CALCULATION_METHOD.OPEN_STOP_LOSS ? (
+          
+        ) : null} */}
         <div className="grid items-center gap-2">
           <Label htmlFor="pips">Pip amount</Label>
           <Input
