@@ -45,15 +45,15 @@ const XAU_USD_CONTRACT_SIZE = 100
 
 const PAIRS = [
   {
-    value: 'XAU_USD',
+    value: 'XAU/USD',
     label: 'XAU/USD',
   },
   {
-    value: 'US100_USD',
+    value: 'Nasdaq US100',
     label: 'Nasdaq US100',
   },
   {
-    value: 'CLU_USD',
+    value: 'Crude Oil CLU',
     label: 'Crude Oil CLU',
   },
 ]
@@ -62,7 +62,7 @@ const formatToTwoDecimal = (value: number) => Math.floor(value * 100) / 100
 
 function App() {
   const [open, setOpen] = useState(false)
-  const [value, setValue] = useState('XAU_USD')
+  const [value, setValue] = useState('XAU/USD')
 
   const [calculationMethod, setCalculationMethod] = useState(
     CALCULATION_METHOD.PIPS
