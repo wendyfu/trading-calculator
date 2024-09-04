@@ -70,38 +70,62 @@ function App() {
 
   const [state, action] = useActionState<CalculatorState>(
     (state: CalculatorState) => {
-      if (!parseFloat(state.openPrice) || !parseFloat(state.stopLossPrice)) {
-        return state
+      if (calculationMethod === CALCULATION_METHOD.PIPS) {
+        if (!parseFloat(state.pips)) {
+          return state
+        }
+      } else {
+        if (!parseFloat(state.openPrice) || !parseFloat(state.stopLossPrice)) {
+          return state
+        }
       }
 
       const maxRiskAmount = (state.capital * state.riskPercentage) / 100
 
-      const openPrice = parseFloat(state.openPrice)
-      const stopLossPrice = parseFloat(state.stopLossPrice)
+      if (calculationMethod === CALCULATION_METHOD.PIPS) {
+        const pips = parseFloat(state.pips)
 
-      const pips = Math.abs(openPrice - stopLossPrice) * 10
-      state.pips = formatToTwoDecimal(pips).toString()
+        if (pips === 0) {
+          setLotSize('')
+          setRiskAmount('')
+          return state
+        }
 
-      if (pips === 0) {
-        setLotSize('')
-        setRiskAmount('')
-        return state
+        const maxLotSize = formatToTwoDecimal(
+          maxRiskAmount / (pips * XAU_USD_CONTRACT_SIZE)
+        )
+
+        setLotSize(maxLotSize.toString())
+
+        setRiskAmount((pips * XAU_USD_CONTRACT_SIZE * maxLotSize).toFixed(2))
+      } else {
+        const openPrice = parseFloat(state.openPrice)
+        const stopLossPrice = parseFloat(state.stopLossPrice)
+
+        const pips = Math.abs(openPrice - stopLossPrice) * 10
+        state.pips = formatToTwoDecimal(pips).toString()
+
+        if (pips === 0) {
+          setLotSize('')
+          setRiskAmount('')
+          return state
+        }
+
+        const maxLotSize = formatToTwoDecimal(
+          maxRiskAmount /
+            (Math.abs(openPrice - stopLossPrice) * XAU_USD_CONTRACT_SIZE)
+        )
+
+        setLotSize(maxLotSize.toString())
+
+        setRiskAmount(
+          (
+            Math.abs(openPrice - stopLossPrice) *
+            XAU_USD_CONTRACT_SIZE *
+            maxLotSize
+          ).toFixed(2)
+        )
       }
-
-      const maxLotSize = formatToTwoDecimal(
-        maxRiskAmount /
-          (Math.abs(openPrice - stopLossPrice) * XAU_USD_CONTRACT_SIZE)
-      )
-
-      setLotSize(maxLotSize.toString())
-
-      setRiskAmount(
-        (
-          Math.abs(openPrice - stopLossPrice) *
-          XAU_USD_CONTRACT_SIZE *
-          maxLotSize
-        ).toFixed(2)
-      )
 
       return state
     },
@@ -154,6 +178,11 @@ function App() {
   const onCalculationMethodChange = (value: string) => {
     setCalculationMethod(value)
     setStartTransition(!startTransition)
+    state.openPrice = ''
+    state.stopLossPrice = ''
+    state.pips = ''
+    setLotSize('')
+    setRiskAmount('')
   }
 
   return (
@@ -276,9 +305,6 @@ function App() {
             </div>
           )}
         </Transition>
-        {/* {calculationMethod === CALCULATION_METHOD.OPEN_STOP_LOSS ? (
-          
-        ) : null} */}
         <div className="grid items-center gap-2">
           <Label htmlFor="pips">Pip amount</Label>
           <Input
