@@ -8,138 +8,40 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ChangeEvent, useActionState, useState, useRef } from 'react'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Button } from '@/components/ui/button'
-import { Check, ChevronsUpDown } from 'lucide-react'
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
-import { cn } from '@/lib/utils'
+import { ChangeEvent, useState, useRef } from 'react'
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from '@/components/ui/popover'
+// import { Button } from '@/components/ui/button'
+// import { Check, ChevronsUpDown } from 'lucide-react'
+// import {
+//   Command,
+//   CommandGroup,
+//   CommandInput,
+//   CommandItem,
+//   CommandList,
+// } from '@/components/ui/command'
+// import { cn } from '@/lib/utils'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Transition } from 'react-transition-group'
-
-interface CalculatorState {
-  openPrice: string
-  stopLossPrice: string
-  pips: string
-  capital: number
-  riskPercentage: number
-  [key: string]: number | string
-}
-
-const CALCULATION_METHOD = {
-  OPEN_STOP_LOSS: 'OPEN_STOP_LOSS',
-  PIPS: 'PIPS',
-}
-
-const XAU_USD_CONTRACT_SIZE = 100
-
-const PAIRS = [
-  {
-    value: 'XAUUSD',
-    label: 'XAUUSD',
-  },
-  {
-    value: 'BTCUSD',
-    label: 'BTCUSD',
-  },
-  {
-    value: 'BNBUSD',
-    label: 'BNBUSD',
-  },
-]
-
-const formatToTwoDecimal = (value: number) => Math.floor(value * 100) / 100
+import { CALCULATION_METHOD } from '@/domain/constant'
+import { useCalculator } from '@/hooks/useCalculator'
 
 function App() {
-  const [open, setOpen] = useState(false)
-  const [value, setValue] = useState('XAUUSD')
+  const {
+    state,
+    action,
+    calculationMethod,
+    setCalculationMethod,
+    lotSize,
+    riskAmount,
+    reset,
+  } = useCalculator()
 
-  const [calculationMethod, setCalculationMethod] = useState(
-    CALCULATION_METHOD.PIPS
-  )
-
-  const [state, action] = useActionState<CalculatorState>(
-    (state: CalculatorState) => {
-      if (calculationMethod === CALCULATION_METHOD.PIPS) {
-        if (!parseFloat(state.pips)) {
-          return state
-        }
-      } else {
-        if (!parseFloat(state.openPrice) || !parseFloat(state.stopLossPrice)) {
-          return state
-        }
-      }
-
-      const maxRiskAmount = (state.capital * state.riskPercentage) / 100
-
-      if (calculationMethod === CALCULATION_METHOD.PIPS) {
-        const pips = parseFloat(state.pips)
-
-        if (pips === 0) {
-          setLotSize('')
-          setRiskAmount('')
-          return state
-        }
-
-        const maxLotSize = formatToTwoDecimal(
-          maxRiskAmount / (pips * XAU_USD_CONTRACT_SIZE)
-        )
-
-        setLotSize(maxLotSize.toString())
-
-        setRiskAmount((pips * XAU_USD_CONTRACT_SIZE * maxLotSize).toFixed(2))
-      } else {
-        const openPrice = parseFloat(state.openPrice)
-        const stopLossPrice = parseFloat(state.stopLossPrice)
-
-        const pips = Math.abs(openPrice - stopLossPrice) * 10
-        state.pips = formatToTwoDecimal(pips).toString()
-
-        if (pips === 0) {
-          setLotSize('')
-          setRiskAmount('')
-          return state
-        }
-
-        const maxLotSize = formatToTwoDecimal(
-          maxRiskAmount /
-            (Math.abs(openPrice - stopLossPrice) * XAU_USD_CONTRACT_SIZE)
-        )
-
-        setLotSize(maxLotSize.toString())
-
-        setRiskAmount(
-          (
-            Math.abs(openPrice - stopLossPrice) *
-            XAU_USD_CONTRACT_SIZE *
-            maxLotSize
-          ).toFixed(2)
-        )
-      }
-
-      return state
-    },
-    {
-      openPrice: '',
-      stopLossPrice: '',
-      pips: '',
-      capital: 2000,
-      riskPercentage: 2,
-    }
-  )
-
-  const [lotSize, setLotSize] = useState('')
-  const [riskAmount, setRiskAmount] = useState('')
+  // const [open, setOpen] = useState(false)
+  // const [value, setValue] = useState('XAUUSD')
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -178,21 +80,17 @@ function App() {
   const onCalculationMethodChange = (value: string) => {
     setCalculationMethod(value)
     setStartTransition(!startTransition)
-    state.openPrice = ''
-    state.stopLossPrice = ''
-    state.pips = ''
-    setLotSize('')
-    setRiskAmount('')
+    reset()
   }
 
   return (
     <Card className="w-[400px]">
       <CardHeader>
-        <CardTitle>Lot Size Calculator</CardTitle>
+        <CardTitle>XAU/USD Lot Size Calculator</CardTitle>
         <CardDescription>Tailored for Orbi Trade</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid items-center gap-2 mb-2 pb-2">
+        {/* <div className="grid items-center gap-2 mb-2 pb-2">
           <Label>Pairs</Label>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -236,7 +134,7 @@ function App() {
               </Command>
             </PopoverContent>
           </Popover>
-        </div>
+        </div> */}
         <div className="grid items-center gap-2 mb-2 pb-2">
           <Label>Calculate by...</Label>
           <RadioGroup

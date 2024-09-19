@@ -1,0 +1,4 @@
+export const CALCULATION_METHOD = {
+  OPEN_STOP_LOSS: 'OPEN_STOP_LOSS',
+  PIPS: 'PIPS',
+}
