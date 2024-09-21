@@ -5,6 +5,16 @@ import { XAUUSDPairCalculator } from './XAUUSDPairCalculator'
 describe('XAUUSDPairCalculator', () => {
   const calculator = new XAUUSDPairCalculator()
 
+  it('should calculate the pips correctly', () => {
+    expect(calculator.calculatePips(2100, 2100)).toEqual(0)
+
+    expect(calculator.calculatePips(2100, 2100.1)).toEqual(1)
+
+    expect(calculator.calculatePips(2100, 2099.9)).toEqual(1)
+
+    expect(calculator.calculatePips(2100, 2112.5)).toEqual(125)
+  })
+
   it('should calculate the maximum lot size correctly', () => {
     expect(
       calculator.calculateMaxLotSize(new Decimal(100), new Decimal(100))
