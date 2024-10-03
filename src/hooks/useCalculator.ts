@@ -1,6 +1,5 @@
 import { CALCULATION_METHOD } from '@/domain/constant'
 import { PairCalculator } from '@/domain/IPairCalculator'
-import { PAIRS_CONTRACT_SIZE } from '@/domain/pairs'
 import { XAUUSDPairCalculator } from '@/domain/XAUUSDPairCalculator'
 import Decimal from 'decimal.js'
 import { useActionState, useState } from 'react'
@@ -9,8 +8,8 @@ interface CalculatorState {
   openPrice: string
   stopLossPrice: string
   pips: string
-  capital: number
-  riskPercentage: number
+  capital: string
+  riskPercentage: string
   [key: string]: number | string
 }
 
@@ -37,11 +36,16 @@ export const useCalculator = () => {
     return true
   }
 
-  const isValidInput = (state: {
-    openPrice: string
-    stopLossPrice: string
-    pips: string
-  }): boolean => {
+  const isValidInput = (state: CalculatorState): boolean => {
+    if (
+      !validateInputNumber(state.capital) ||
+      !validateInputNumber(state.riskPercentage)
+    ) {
+      setLotSize('')
+      setRiskAmount('')
+      return false
+    }
+
     if (calculationMethod === CALCULATION_METHOD.OPEN_STOP_LOSS) {
       return (
         validateInputNumber(state.openPrice) &&
@@ -119,7 +123,4 @@ export const useCalculator = () => {
     riskAmount,
     reset,
   }
-}
-function isValidInput(state: CalculatorState) {
-  throw new Error('Function not implemented.')
 }
