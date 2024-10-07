@@ -101,8 +101,8 @@ export const useCalculator = () => {
       openPrice: '',
       stopLossPrice: '',
       pips: '',
-      capital: 2000,
-      riskPercentage: 5,
+      capital: '2000',
+      riskPercentage: '5',
     }
   )
 
