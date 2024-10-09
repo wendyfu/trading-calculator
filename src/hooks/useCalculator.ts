@@ -68,7 +68,7 @@ export const useCalculator = () => {
         return state
       }
 
-      const maxRiskAmount = new Decimal(state.capital)
+      const maxRiskAmount = new Decimal(parseFloat(state.capital))
         .mul(state.riskPercentage)
         .div(100)
 
@@ -76,8 +76,8 @@ export const useCalculator = () => {
       if (calculationMethod === CALCULATION_METHOD.PIPS) {
         pips = new Decimal(parseFloat(state.pips))
       } else {
-        const openPrice = new Decimal(state.openPrice)
-        const stopLossPrice = new Decimal(state.stopLossPrice)
+        const openPrice = new Decimal(parseFloat(state.openPrice))
+        const stopLossPrice = new Decimal(parseFloat(state.stopLossPrice))
 
         pips = openPrice.sub(stopLossPrice).abs().mul(10)
         state.pips = pips.toFixed(2, Decimal.ROUND_DOWN)
