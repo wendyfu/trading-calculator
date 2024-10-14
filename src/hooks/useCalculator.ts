@@ -69,7 +69,7 @@ export const useCalculator = () => {
       }
 
       const maxRiskAmount = new Decimal(parseFloat(state.capital))
-        .mul(state.riskPercentage)
+        .mul(parseFloat(state.riskPercentage))
         .div(100)
 
       let pips = new Decimal(0)
